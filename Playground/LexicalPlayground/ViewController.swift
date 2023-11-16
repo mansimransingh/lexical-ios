@@ -17,19 +17,22 @@ class ViewController: UIViewController, UIToolbarDelegate {
   var lexicalView: LexicalView?
   weak var toolbar: UIToolbar?
   weak var hierarchyView: UIView?
+  weak var markdownView: UIView?
   private let editorStatePersistenceKey = "editorState"
+  private let stack = UIStackView()
 
   override func viewDidLoad() {
     super.viewDidLoad()
     view.backgroundColor = .systemBackground
 
     let editorHistoryPlugin = EditorHistoryPlugin()
-    let toolbarPlugin = ToolbarPlugin(viewControllerForPresentation: self, historyPlugin: editorHistoryPlugin)
+    let toolbarPlugin = ToolbarPlugin(viewControllerForPresentation: self, 
+                                      historyPlugin: editorHistoryPlugin)
     let toolbar = toolbarPlugin.toolbar
     toolbar.delegate = self
 
-    let hierarchyPlugin = NodeHierarchyViewPlugin()
-    let hierarchyView = hierarchyPlugin.hierarchyView
+    let hierarchyPlugin = NodeHierarchyViewPlugin(isHierarchy: true)
+    let markdownPlugin = NodeHierarchyViewPlugin(isHierarchy: false)
 
     let listPlugin = ListPlugin()
     let imagePlugin = InlineImagePlugin()
@@ -42,20 +45,26 @@ class ViewController: UIViewController, UIToolbarDelegate {
       .foregroundColor: UIColor.systemBlue,
     ]
 
-    let editorConfig = EditorConfig(theme: theme, plugins: [toolbarPlugin, listPlugin, hierarchyPlugin, imagePlugin, linkPlugin, editorHistoryPlugin])
+    let editorConfig = EditorConfig(theme: theme, plugins: [toolbarPlugin, listPlugin, hierarchyPlugin, markdownPlugin, imagePlugin, linkPlugin, editorHistoryPlugin])
     let lexicalView = LexicalView(editorConfig: editorConfig, featureFlags: FeatureFlags())
 
     linkPlugin.lexicalView = lexicalView
 
     self.lexicalView = lexicalView
     self.toolbar = toolbar
-    self.hierarchyView = hierarchyView
+    self.hierarchyView = hierarchyPlugin.hierarchyView
+    self.markdownView = markdownPlugin.hierarchyView
 
     self.restoreEditorState()
 
-    view.addSubview(lexicalView)
     view.addSubview(toolbar)
-    view.addSubview(hierarchyView)
+    view.addSubview(stack)
+    
+    stack.axis = .vertical
+    stack.distribution = .fillEqually
+    stack.addArrangedSubview(lexicalView)
+    stack.addArrangedSubview(hierarchyPlugin.hierarchyView)
+    stack.addArrangedSubview(markdownPlugin.hierarchyView)
 
     navigationItem.title = "Lexical"
     setUpExportMenu()
@@ -64,22 +73,18 @@ class ViewController: UIViewController, UIToolbarDelegate {
   override func viewDidLayoutSubviews() {
     super.viewDidLayoutSubviews()
 
-    if let lexicalView, let toolbar, let hierarchyView {
+    if let toolbar {
       let safeAreaInsets = self.view.safeAreaInsets
-      let hierarchyViewHeight = 300.0
 
       toolbar.frame = CGRect(x: 0,
                              y: safeAreaInsets.top,
                              width: view.bounds.width,
                              height: 44)
-      lexicalView.frame = CGRect(x: 0,
-                                 y: toolbar.frame.maxY,
-                                 width: view.bounds.width,
-                                 height: view.bounds.height - toolbar.frame.maxY - safeAreaInsets.bottom - hierarchyViewHeight)
-      hierarchyView.frame = CGRect(x: 0,
-                                   y: lexicalView.frame.maxY,
-                                   width: view.bounds.width,
-                                   height: hierarchyViewHeight)
+      
+      stack.frame = CGRect(x: 0,
+                           y: toolbar.frame.maxY,
+                           width: view.bounds.width,
+                           height: view.bounds.height - toolbar.frame.maxY - safeAreaInsets.bottom)
     }
   }
 

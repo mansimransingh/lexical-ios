@@ -8,14 +8,18 @@
 import Foundation
 import Lexical
 import LexicalListPlugin
+import LexicalMarkdown
 import UIKit
 
 public class NodeHierarchyViewPlugin: Plugin {
   private var _hierarchyView: UITextView
 
   weak var editor: Editor?
+  
+  private let isHierarchy: Bool
 
-  init() {
+  init(isHierarchy: Bool) {
+    self.isHierarchy = isHierarchy
     self._hierarchyView = UITextView()
     _hierarchyView.backgroundColor = .black
     _hierarchyView.layer.borderColor = UIColor.systemGray.cgColor
@@ -52,9 +56,16 @@ public class NodeHierarchyViewPlugin: Plugin {
 
   private func updateHierarchyView(editorState: EditorState) {
     do {
-      let hierarchyString = try getNodeHierarchy(editorState: editorState)
-      let selectionString = try getSelectionData(editorState: editorState)
-      _hierarchyView.text = "\(hierarchyString)\n\n\(selectionString)"
+      if isHierarchy {
+        let hierarchyString = try getNodeHierarchy(editorState: editorState)
+        let selectionString = try getSelectionData(editorState: editorState)
+        _hierarchyView.text = "\(hierarchyString)\n\n\(selectionString)"
+      } else {
+        guard let editor = editor else {
+          return
+        }
+        _hierarchyView.text = try LexicalMarkdown.generateMarkdown(from: editor, selection: nil)
+      }
     } catch {
       print("Error updating node hierarchy.")
     }
