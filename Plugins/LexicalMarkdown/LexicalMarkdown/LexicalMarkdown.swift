@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import Markdown
 import Lexical
 
 open class LexicalMarkdown: Plugin {
@@ -20,7 +21,12 @@ open class LexicalMarkdown: Plugin {
   public func tearDown() {
   }
 
-  public class func generateMarkdown(from editor: Editor, selection: BaseSelection?) throws -> String {
-    throw NSError(domain: "", code: 0, userInfo: [NSLocalizedFailureReasonErrorKey: "Unimplemented"])
+  public class func generateMarkdown(from editor: Editor, 
+                                     selection: BaseSelection?) throws -> String {
+    guard let root = editor.getEditorState().getRootNode() else {
+      return ""
+    }
+
+    return Markdown.Document(root.getChildren().exportAsBlockMarkdown()).format()
   }
 }
