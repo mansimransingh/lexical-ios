@@ -29,4 +29,16 @@ open class LexicalMarkdown: Plugin {
 
     return Markdown.Document(root.getChildren().exportAsBlockMarkdown()).format()
   }
+
+  public func parseMarkdown(string: String) throws {
+    try editor?.update {
+      guard let root = self.editor?.getEditorState().getRootNode() else {
+        throw LexicalError.internal("Failed to parse")
+      }
+
+      let parsed = Document(parsing: string)
+
+      // TODO: attach parsed document to node
+    }
+  }
 }
