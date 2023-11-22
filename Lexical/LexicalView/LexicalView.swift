@@ -201,7 +201,7 @@ public extension LexicalViewDelegate {
     try textView.updateNativeSelection(from: selection)
   }
 
-  func setMarkedTextFromReconciler(_ markedText: NSAttributedString, selectedRange: NSRange) {
+  public func setMarkedTextFromReconciler(_ markedText: NSAttributedString, selectedRange: NSRange) {
     textView.setMarkedTextFromReconciler(markedText, selectedRange: selectedRange)
   }
 
